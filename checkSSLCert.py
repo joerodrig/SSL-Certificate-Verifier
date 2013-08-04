@@ -1,3 +1,11 @@
+'''
+Author: Joseph Rodriguez
+Date: August 1st 2013
+Description:
+This script will search through all of the IP addresses(5 at a time) provided upon startup, and will grab certificate
+information from each IP address and write it to a spreadsheet file(.csv).
+'''
+
 from M2Crypto import SSL, RSA
 from subprocess import *
 import ssl
