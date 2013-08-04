@@ -3,7 +3,7 @@ Author: Joseph Rodriguez
 Date: August 1st 2013
 Description: This script is to be used with the IP Range list created with:"createIPRange.py"
 This script will search through all of the IP addresses(5 at a time) listed in your IP Range text file and will grab certificate
-information from each IP address.
+information from each IP address and write it to a spreadsheet file(.csv).
 '''
 
 
