@@ -1,6 +1,7 @@
 '''
 Author: Joseph Rodriguez
 Date: August 1st 2013
+Latest Update: May 23,2014
 Description:
 This script will search through all of the IP addresses(5 at a time) provided upon startup, and will grab certificate
 information from each IP address and write it to a spreadsheet file(.csv).
@@ -17,22 +18,17 @@ from datetime import datetime
 
 def main():
     now = datetime.now()
-
     global title
     title = now.strftime("%Y-%m-%d_%H-%M-%S") + '_Log.csv'
-
-    timeLog = open('Logs.txt','a')
-    timeLog.write('Started: '+ str(now) + '\n')
-    timeLog.write('Writing to:' + str(title) + '\n')
-    timeLog.close()
-    
+    timeLog = TimeLog(now,title) # Track start time
     
     c = open(title, 'w')
-    
     w = csv.writer(c)
     w.writerow(['IP', 'Company Name', 'ExpirationDate','Time Left(In Days)', 'CommonName', 'Issuer',
                 'Serial #','Public Key','Public Key Size','Error Code','Description'])
     c.close()
+
+
     global IP_list
     IP_list = []
     global certInfoHolder
@@ -40,23 +36,38 @@ def main():
     global brokenCerts
     brokenCerts = []
 
-    getRanges()
+    getRanges(timeLog)
 
-def getRanges():
+    timeLog.logEnd(str(datetime.now())) # Write end time to run log
+
+class TimeLog:
+    def __init__(self,cur_time,title):
+        self.tl = open('run_logs.txt','a')
+        self.logStart(cur_time,title)
+
+    def logStart(self,c_time,csv_title):
+        self.tl.write('Time Started: {0}\n'.format(str(c_time)))
+        self.tl.write('Writing to: {0}\n'.format(str(csv_title)))
+
+    def amtToScan(self,numOfIPs):
+        self.tl.write('Scanning: {0} IP Addresses\n'.format(str(numOfIPs)))
+
+    def logEnd(self,end_time):
+        self.tl.write('Finished:{0}'.format(end_time+'\n'))
+        self.tl.close()
+
+
+def getRanges(tl):
     print 'Enter a range(ex. From: 173.252.1.0 , To: 173.252.1.200)'
     starting_IP = raw_input('From: ')
     ending_IP = raw_input('To: ')
 
     ip_ranges = ipRange(starting_IP, ending_IP)
     addMore = raw_input('Do you want to add another IP range?Y/N')
-    addMore = addMore[0].lower()
-    if addMore == 'y':
+    if addMore[0].lower() == 'y':
         getRanges()       
-    elif addMore == 'n':
-        timeLog = open('Logs.txt','a')
-        timeLog.write('Scanning: ' + str(len(IP_list)) + ' IP Addresses \n')
-        timeLog.close()
-        #print 'Done gathering IP Addresses'
+    elif addMore[0].lower() == 'n':
+        tl.amtToScan(len(IP_list)) #Write number of IPs being scanned to run log
         createdThreads = 0
         threadSplit = len(IP_list) / 5
 
@@ -103,10 +114,6 @@ def getRanges():
             writeToCSV.writerow([info[0],'','','','','','','','',info[1],info[2]])
         openCSV.close()
 
-    timeLog = open('Logs.txt','a')
-    timeLog.write('Finished: ' + str(datetime.now()) + '\n')
-    timeLog.close()
-
                               
 def ipRange(start_ip, end_ip):
     start = list(map(int, start_ip.split(".")))
@@ -138,29 +145,26 @@ class getCertInfo(threading.Thread):
 
         except CalledProcessError as detail:
             detail = str(detail)
-            self.eC = detail[len(detail)-2:]
+            self.err_code = detail[len(detail)-2:]
             # If operation times out(28):
-            if re.search('28', self.eC) is not None:
+            if re.search('28', self.err_code) is not None:
                 self.x = [str(self.IP_check), '28', 'Operation timed out']
-                brokenCerts.append(self.x)
-                print self.x
-    
+            
             #60:Unable to verify Certificate with known CA Certs --Expired or Self-Signed
             #51: Cert CN doesn't match host name
-            elif re.search('60', self.eC) is not None or re.search('51', self.eC) is not None:
+            #Recheck
+            elif re.search('60', self.err_code) is not None or re.search('51', self.err_code) is not None:
+                print 'Rechecking: '+str(self.IP_check)
                 self.getSSLCert()
 
             elif re.match(' 7', self.eC) is not None:
                 self.x = [str(self.IP_check), '7', 'Failed to connect to host/proxy']
-                brokenCerts.append(self.x)
 
             elif re.match('35', self.eC) is not None:
                 self.x = [str(self.IP_check), '35', 'Problem with SSL/TLS handshake']
-                brokenCerts.append(self.x)
             else:
-                self.x = [str(self.IP_check), self.eC, '']
-                brokenCerts.append(self.x)
-                print self.x                    
+                self.x = [str(self.IP_check), self.err_code, '']
+            brokenCerts.append(self.x)                  
 
      def getSSLCert(self):
 
@@ -181,11 +185,13 @@ class getCertInfo(threading.Thread):
         self.x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, self.serv_cert)
         #Formatting expiration date and time
         self.eDateT = str(self.x509.get_notAfter())
+        
         try:
             self.formatDT = datetime.strptime(self.eDateT[0:4] +' '+self.eDateT[4:6]+' '+ self.eDateT[6:8],'%Y %m %d')
         except AttributeError:
             self.formatDT = datetime.strptime(self.eDateT[0:4] +' '+self.eDateT[4:6]+' '+ self.eDateT[6:8],'%Y %m %d')
-        self.expiresIn = self.formatDT - datetime.now()
+        
+        self.expiresIn = self.formatDT - datetime.now() #Days until expiration
         self.certInfo = self.x509.get_subject()
         self.commonName = self.certInfo.commonName
         self.companyName = self.certInfo.O
@@ -198,3 +204,4 @@ class getCertInfo(threading.Thread):
         print self.x
     
 main()
+
