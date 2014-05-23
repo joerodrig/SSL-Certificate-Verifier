@@ -16,7 +16,7 @@ Error Code	<br />
 Description<br />
 
 Python libraries required to run this script:
-M2Crypto
+M2Crypto < Dependencies: Swig & PCRE
 pyOpenSSL
 
 If you have pip installed, you may install these libraries through terminal:
