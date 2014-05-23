@@ -12,6 +12,8 @@ After you input you range values, a text file will be created that "checkSSLCert
 The text file created is called: IPRange.txt
 
 '''
+
+'''
 def main():
     IP_list = []
     getRange(IP_list)
@@ -19,9 +21,9 @@ def main():
 
 def getRange(ipl):
     print 'Enter a range(ex. From: 173.252.1.0 , To: 173.252.1.200)'
-    starting_IP = raw_input('From: ')
-    ending_IP = raw_input('To: ')
-    ipRange(ipl,starting_IP,ending_IP)
+
+    #Get from/to range for ip addresses
+    ipRange(ipl,raw_input('From: '),raw_input('To: '))
 
     #Add more addresses or write addresses to IPrange.txt file
     getRange(ipl) if raw_input('Add another IP range?y/n')[0].lower() == 'y' else writeToText(ipl)
