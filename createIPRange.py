@@ -1,6 +1,6 @@
 '''
 Author: Joseph Rodriguez
-
+Created: August, 2013
 Last Edit: May 23,2014
 Credits to: http://cmikavac.net/2011/09/11/how-to-generate-an-ip-range-list-in-python/
 For the initial ipRange() code that I modified slightly for my purposes
