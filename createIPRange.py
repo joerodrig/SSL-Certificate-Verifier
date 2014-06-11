@@ -13,7 +13,6 @@ The text file created is called: IPRange.txt
 
 '''
 
-'''
 def main():
     IP_list = []
     getRange(IP_list)
