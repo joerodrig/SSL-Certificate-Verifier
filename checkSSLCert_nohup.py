@@ -1,7 +1,7 @@
 '''
 Author: Joseph Rodriguez
 Creation Date: August 1st 2013
-Latest Update: May 24,2014
+Latest Update: June 10,2014
 Description:
 This script is to be used with the IP Range list created with:"createIPRange.py".
 This script will search through all of the IP addresses(5 at a time) provided upon startup, and will grab certificate
